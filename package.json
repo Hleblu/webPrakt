@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/Hleblu/webPrakt/issues"
   },
-  "homepage": "https://github.com/Hleblu/webPrakt#readme"
+  "homepage": "https://github.com/Hleblu/webPrakt#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }

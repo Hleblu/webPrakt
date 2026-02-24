@@ -1,36 +1,68 @@
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-
+import express from 'express';
+const app = express();
 const PORT = 3000;
 
-const server = http.createServer((req, res) => {
-    const url = req.url.replace(/\/$/, '');
+app.use(express.json());
 
-    let filePath = '';
-    
-    if (url === '/home' || url === '') {
-        filePath = 'src/home.html';
-    } else if (url === '/contacts') {
-        filePath = 'src/contacts.html';
-    } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('Error code 404: Page not found');
-        return;
-    }
+const tasks = [];
+let nextId = 1;
 
-    fs.readFile(path.resolve(filePath), (err, data) => {
-        if (err) {
-            res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-            res.end('Error code 500: Server error');
-        } else {
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.write(data);
-            res.end();
-        }
-    });
+app.get('/tasks', (req, res) => {
+    res.json(tasks);
 });
 
-server.listen(PORT, () => {
+app.post('/tasks', (req, res) => {
+    const { title } = req.body;
+
+    if (!title) 
+        return res.status(400).json({ error: "title is required!" });
+
+    const newTask = {
+        id: nextId++,
+        title: title
+    };
+
+    tasks.push(newTask);
+    res.status(201).json(newTask);
+});
+
+app.get('/tasks/:id', (req, res) => {
+    const taskId = parseInt(req.params.id);
+
+    const task = tasks.find(t => t.id === taskId);
+
+    if (!task)
+        return res.status(404).json({ error: "no task with said id found" });
+
+    res.json(task);
+});
+
+app.patch('/tasks/:id', (req, res) => {
+    const taskId = parseInt(req.params.id);
+    const { title } = req.body;
+
+    const task = tasks.find(t => t.id === taskId);
+
+    if (!task)
+        return res.status(404).json({ error: "no task with said id found"});
+
+    if (title !== undefined)
+        task.title = title;
+
+    res.json(task);
+});
+
+app.delete('/tasks/:id', (req, res) => {
+    const taskId = parseInt(req.params.id);
+    const index = tasks.findIndex(t => t.id === taskId);
+
+    if (index === -1)
+        return res.status(404).json({ error: "no task with said id found"});
+
+    tasks.splice(index, 1);
+    res.status(204).send();
+});
+
+app.listen(PORT, () => {
     console.log(`Server started at http://localhost:${PORT}`);
 });
